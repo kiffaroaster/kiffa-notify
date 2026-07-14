@@ -15,7 +15,6 @@
 
   document.getElementById("branch-name").textContent = cfg.BRANCH_NAME || "فرع كفة";
   document.getElementById("branch-addr").textContent = cfg.BRANCH_ADDRESS || "";
-  document.getElementById("directions-link").href = cfg.MAPS_URL || "#";
   document.getElementById("review-link").href = cfg.MAPS_URL || "#";
 
   let pollTimer = null;
@@ -140,8 +139,15 @@
     }, cfg.POLL_INTERVAL_MS || 2500);
   }
 
+  // يحوّل الأرقام العربية (٢٠) والفارسية (۲۰) إلى إنجليزية (20)
+  function normalizeDigits(s) {
+    return s
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+  }
+
   async function submitInvoice() {
-    const invoice = invoiceInput.value.trim();
+    const invoice = normalizeDigits(invoiceInput.value.trim());
     entryError.classList.add("hidden");
     if (!invoice) {
       entryError.textContent = "الرجاء إدخال رقم الفاتورة";
@@ -211,7 +217,25 @@
     modalOverlay.classList.add("hidden");
   }
 
-  document.getElementById("submit-feedback-btn").addEventListener("click", () => {
+  document.getElementById("submit-feedback-btn").addEventListener("click", async () => {
+    const text = document.getElementById("feedback-text").value.trim();
+    if (!selectedRating && !text) {
+      showToast("اختر تقييماً أو اكتب ملاحظة أولاً");
+      return;
+    }
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoice: readyInvoiceNum.textContent,
+          rating: selectedRating,
+          text,
+        }),
+      });
+    } catch (e) {
+      /* best-effort; thank the customer anyway */
+    }
     showToast("شكراً لتقييمك، نقدّر وقتك 🌿");
     setTimeout(closeModal, 900);
   });

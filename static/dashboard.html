@@ -9,11 +9,8 @@
 </head>
 <body>
 
-<div class="kiffa-pattern-bg">
-  <div class="dash-header">
-    <img class="logo" src="assets/lockup-white.png" alt="كفة" />
-    <h1>لوحة الكاشير</h1>
-  </div>
+<div class="hero-header" role="img" aria-label="كفة">
+  <h1 class="hero-title">لوحة الكاشير</h1>
 </div>
 
 <div class="dash-wrap">
@@ -22,7 +19,7 @@
   <div id="pin-screen" class="dash-panel pin-panel">
     <div class="pin-lock">🔒</div>
     <h2>أدخل رمز الدخول</h2>
-    <p class="pin-sub">لوحة الكاشير محمية برمز مكوّن من ٤ أرقام</p>
+    <p class="pin-sub">لوحة الكاشير محمية برمز مكوّن من 4 أرقام</p>
     <input type="password" inputmode="numeric" id="pin-input" class="pin-input" maxlength="4" placeholder="• • • •" autocomplete="off" />
     <button class="btn btn-primary" id="pin-btn">دخول</button>
     <p id="pin-error" class="pin-error hidden">الرمز غير صحيح، حاول مرة أخرى</p>
@@ -38,6 +35,22 @@
       <div class="emoji">☕</div>
       لا توجد طلبات معلّقة حالياً
     </div>
+  </div>
+
+  <div id="ratings-panel" class="dash-panel hidden">
+    <div class="panel-title">
+      <h2>التقييمات</h2>
+      <div class="ratings-meta">
+        <span class="avg-rating" id="avg-rating">—</span>
+        <span class="pending-count" id="ratings-count">0</span>
+      </div>
+    </div>
+    <div id="ratings-list"></div>
+    <div id="ratings-empty" class="empty-state">
+      <div class="emoji">💬</div>
+      لا توجد تقييمات بعد
+    </div>
+    <p class="ratings-note">التقييمات تُحذف تلقائياً بعد 30 يوماً</p>
   </div>
 
 </div>
