@@ -1,0 +1,23 @@
+{
+  "name": "كفة | تابع طلبك",
+  "short_name": "كفة",
+  "description": "تنبيه جاهزية الطلب في مقهى ومحمصة كفة",
+  "start_url": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#eaf7f5",
+  "theme_color": "#5cc4b9",
+  "icons": [
+    {
+      "src": "/assets/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
