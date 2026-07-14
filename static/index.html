@@ -15,11 +15,8 @@
 </head>
 <body>
 
-<div class="kiffa-pattern-bg">
-  <div class="brand-header">
-    <img class="logo" src="assets/lockup-white.png" alt="كفة" />
-    <p class="tagline">نجهز لك طلبك بكل عناية</p>
-  </div>
+<div class="hero-header" role="img" aria-label="كفة">
+  <p class="tagline">الدغدغة جايتك!</p>
 </div>
 
 <div class="page-wrap">
@@ -29,16 +26,16 @@
     <h1>تابع طلبك</h1>
     <p class="sub">أدخل رقم الفاتورة واضغط تأكيد، وبنعلمك أول ما يكون طلبك جاهز.</p>
     <label class="field-label" for="invoice-input">رقم الفاتورة</label>
-    <input type="text" inputmode="numeric" id="invoice-input" placeholder="مثال: 1023" maxlength="12" />
+    <input type="text" inputmode="numeric" id="invoice-input" placeholder="مثال: 18" maxlength="12" />
     <button class="btn btn-primary" id="confirm-btn">تأكيد</button>
     <p id="entry-error" class="waiting-text hidden" style="color:#b23b3b; margin-top:12px;"></p>
   </div>
 
   <!-- Step 2: waiting -->
   <div id="view-waiting" class="card hidden">
-    <span class="status-badge"><span class="dot"></span> طلبك قيد التحضير</span>
+    <span class="status-badge"><span class="dot"></span> جاري تحضير طلبك على قدم وساق</span>
     <div class="invoice-display">
-      <span class="cup">☕</span>
+      <img class="cup-img" src="assets/cup.png" alt="كوب كفة" />
       <span class="num" id="waiting-invoice-num">—</span>
     </div>
     <p class="waiting-text">شكراً لصبرك، فريقنا يحضّر طلبك الآن بكل اهتمام.<br/>راح توصلك رسالة هنا فور ما يكون جاهز.</p>

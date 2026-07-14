@@ -1,5 +1,10 @@
 (function () {
   const cfg = window.KIFFA_CONFIG || {};
+  const pinScreen = document.getElementById("pin-screen");
+  const pinInput = document.getElementById("pin-input");
+  const pinBtn = document.getElementById("pin-btn");
+  const pinError = document.getElementById("pin-error");
+  const dashMain = document.getElementById("dash-main");
   const grid = document.getElementById("orders-grid");
   const emptyState = document.getElementById("empty-state");
   const pendingCount = document.getElementById("pending-count");
@@ -8,7 +13,81 @@
   const cancelConfirmBtn = document.getElementById("cancel-confirm");
   const doConfirmBtn = document.getElementById("do-confirm");
 
+  const PIN_KEY = "kiffa_dash_pin";
+  let pin = localStorage.getItem(PIN_KEY) || null;
   let pendingInvoice = null;
+  let refreshTimer = null;
+
+  function authHeaders() {
+    return { "X-Dashboard-Pin": pin || "" };
+  }
+
+  /* ---------- PIN ---------- */
+
+  async function tryLogin(candidate) {
+    try {
+      const res = await fetch("/api/dashboard/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: candidate }),
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function unlock() {
+    pinScreen.classList.add("hidden");
+    dashMain.classList.remove("hidden");
+    refresh();
+    if (!refreshTimer) {
+      refreshTimer = setInterval(refresh, cfg.POLL_INTERVAL_MS || 2500);
+    }
+  }
+
+  function lock() {
+    localStorage.removeItem(PIN_KEY);
+    pin = null;
+    if (refreshTimer) {
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
+    dashMain.classList.add("hidden");
+    pinScreen.classList.remove("hidden");
+    pinInput.value = "";
+    pinInput.focus();
+  }
+
+  async function submitPin() {
+    const candidate = pinInput.value.trim();
+    pinError.classList.add("hidden");
+    if (candidate.length !== 4) {
+      pinError.textContent = "الرمز مكوّن من ٤ أرقام";
+      pinError.classList.remove("hidden");
+      return;
+    }
+    pinBtn.disabled = true;
+    const ok = await tryLogin(candidate);
+    pinBtn.disabled = false;
+    if (ok) {
+      pin = candidate;
+      localStorage.setItem(PIN_KEY, pin);
+      unlock();
+    } else {
+      pinError.textContent = "الرمز غير صحيح، حاول مرة أخرى";
+      pinError.classList.remove("hidden");
+      pinInput.value = "";
+      pinInput.focus();
+    }
+  }
+
+  pinBtn.addEventListener("click", submitPin);
+  pinInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitPin();
+  });
+
+  /* ---------- Orders ---------- */
 
   function formatWait(createdAt) {
     const secs = Math.max(0, Math.floor(Date.now() / 1000 - createdAt));
@@ -41,7 +120,11 @@
 
   async function refresh() {
     try {
-      const res = await fetch("/api/orders");
+      const res = await fetch("/api/orders", { headers: authHeaders() });
+      if (res.status === 401) {
+        lock();
+        return;
+      }
       const data = await res.json();
       render(data);
     } catch (e) {
@@ -68,6 +151,7 @@
     try {
       await fetch(`/api/orders/${encodeURIComponent(pendingInvoice)}/ready`, {
         method: "POST",
+        headers: authHeaders(),
       });
     } finally {
       doConfirmBtn.disabled = false;
@@ -76,6 +160,13 @@
     }
   });
 
-  refresh();
-  setInterval(refresh, cfg.POLL_INTERVAL_MS || 2500);
+  /* ---------- Boot ---------- */
+
+  (async function boot() {
+    if (pin && (await tryLogin(pin))) {
+      unlock();
+    } else {
+      lock();
+    }
+  })();
 })();

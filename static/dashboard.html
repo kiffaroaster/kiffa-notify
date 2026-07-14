@@ -17,7 +17,18 @@
 </div>
 
 <div class="dash-wrap">
-  <div class="dash-panel">
+
+  <!-- PIN screen -->
+  <div id="pin-screen" class="dash-panel pin-panel">
+    <div class="pin-lock">🔒</div>
+    <h2>أدخل رمز الدخول</h2>
+    <p class="pin-sub">لوحة الكاشير محمية برمز مكوّن من ٤ أرقام</p>
+    <input type="password" inputmode="numeric" id="pin-input" class="pin-input" maxlength="4" placeholder="• • • •" autocomplete="off" />
+    <button class="btn btn-primary" id="pin-btn">دخول</button>
+    <p id="pin-error" class="pin-error hidden">الرمز غير صحيح، حاول مرة أخرى</p>
+  </div>
+
+  <div id="dash-main" class="dash-panel hidden">
     <div class="panel-title">
       <h2>الطلبات المعلّقة</h2>
       <span class="pending-count" id="pending-count">0</span>
@@ -28,6 +39,7 @@
       لا توجد طلبات معلّقة حالياً
     </div>
   </div>
+
 </div>
 
 <div class="confirm-overlay hidden" id="confirm-overlay">

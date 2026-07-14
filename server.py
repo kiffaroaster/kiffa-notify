@@ -34,6 +34,13 @@ def ensure_vapid_public_key():
 
 VAPID_PUBLIC_KEY = ensure_vapid_public_key()
 
+# رمز دخول لوحة الكاشير — غيّره من Render عبر متغير البيئة DASHBOARD_PIN
+DASHBOARD_PIN = os.environ.get("DASHBOARD_PIN", "1234")
+
+
+def pin_ok():
+    return request.headers.get("X-Dashboard-Pin") == DASHBOARD_PIN
+
 # invoice_number -> {"status", "created_at", "ready_at", "subscription"}
 orders = {}
 
@@ -73,8 +80,18 @@ def push_key():
     return jsonify({"key": VAPID_PUBLIC_KEY})
 
 
+@app.post("/api/dashboard/verify")
+def verify_pin():
+    data = request.get_json(silent=True) or {}
+    if str(data.get("pin", "")) == DASHBOARD_PIN:
+        return jsonify({"ok": True})
+    return jsonify({"ok": False}), 401
+
+
 @app.get("/api/orders")
 def list_pending():
+    if not pin_ok():
+        return jsonify({"error": "unauthorized"}), 401
     with lock:
         items = [
             {"invoice": inv, "created_at": o["created_at"]}
@@ -126,6 +143,8 @@ def order_status(invoice):
 
 @app.post("/api/orders/<invoice>/ready")
 def mark_ready(invoice):
+    if not pin_ok():
+        return jsonify({"error": "unauthorized"}), 401
     with lock:
         o = orders.get(invoice)
         if not o:

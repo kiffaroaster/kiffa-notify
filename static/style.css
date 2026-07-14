@@ -49,6 +49,28 @@ body {
   z-index: 1;
 }
 
+.hero-header {
+  width: 100%;
+  aspect-ratio: 1290 / 540;
+  max-height: 250px;
+  min-height: 150px;
+  background: var(--teal) url('assets/header.png') center / cover no-repeat;
+  position: relative;
+}
+
+.hero-header .tagline {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  margin: 0;
+  text-shadow: 0 1px 8px rgba(44, 138, 128, 0.6);
+}
+
 .brand-header {
   padding: 34px 20px 46px;
   text-align: center;
@@ -79,7 +101,7 @@ body {
   border-radius: var(--card-radius);
   box-shadow: var(--shadow);
   padding: 30px 26px;
-  margin-top: -32px;
+  margin-top: 34px;
 }
 
 .card h1 {
@@ -185,7 +207,7 @@ input[type="text"]:focus, input[type="tel"]:focus, input[type="number"]:focus {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--teal);
+  background: var(--magenta);
   animation: pulse 1.4s infinite;
 }
 
@@ -207,16 +229,18 @@ input[type="text"]:focus, input[type="tel"]:focus, input[type="number"]:focus {
   letter-spacing: 1px;
 }
 
-.invoice-display .cup {
-  font-size: 54px;
+.invoice-display .cup-img {
+  height: 94px;
+  width: auto;
   display: block;
-  margin-bottom: 6px;
-  animation: bob 2.2s ease-in-out infinite;
+  margin: 0 auto 10px;
+  animation: flyCup 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 14px 14px rgba(31, 45, 43, 0.18));
 }
 
-@keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+@keyframes flyCup {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-14px) rotate(3deg); }
 }
 
 .waiting-text {
@@ -512,6 +536,54 @@ textarea:focus { border-color: var(--teal); }
 }
 
 .empty-state .emoji { font-size: 40px; margin-bottom: 10px; }
+
+/* PIN screen */
+.pin-panel {
+  max-width: 380px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 36px 28px;
+}
+
+.pin-panel .pin-lock {
+  font-size: 38px;
+  margin-bottom: 10px;
+}
+
+.pin-panel h2 {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.pin-panel .pin-sub {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 0 0 22px;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 15px 16px;
+  border-radius: 14px;
+  border: 2px solid #e3efed;
+  font-size: 28px;
+  font-family: 'Lato', sans-serif;
+  text-align: center;
+  letter-spacing: 12px;
+  outline: none;
+  background: #fbfefe;
+  direction: ltr;
+}
+
+.pin-input:focus { border-color: var(--teal); }
+
+.pin-error {
+  color: #b23b3b;
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 12px 0 0;
+}
 
 /* Confirm dialog for dashboard */
 .confirm-overlay {
