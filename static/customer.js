@@ -3,6 +3,7 @@
   const viewEntry = document.getElementById("view-entry");
   const viewWaiting = document.getElementById("view-waiting");
   const viewReady = document.getElementById("view-ready");
+  const viewThanks = document.getElementById("view-thanks");
   const invoiceInput = document.getElementById("invoice-input");
   const confirmBtn = document.getElementById("confirm-btn");
   const entryError = document.getElementById("entry-error");
@@ -20,7 +21,9 @@
   let pollTimer = null;
 
   function showView(view) {
-    [viewEntry, viewWaiting, viewReady].forEach((v) => v.classList.add("hidden"));
+    [viewEntry, viewWaiting, viewReady, viewThanks].forEach((v) =>
+      v.classList.add("hidden")
+    );
     view.classList.remove("hidden");
   }
 
@@ -232,6 +235,10 @@
       /* best-effort */
     }
     showToast("شكراً لتقييمك، نقدّر وقتك 🌿");
+    setTimeout(() => {
+      closeModal();
+      showView(viewThanks);
+    }, 1600);
   }
 
   starEls.forEach((star) => {
@@ -251,6 +258,7 @@
   }
   function closeModal() {
     modalOverlay.classList.add("hidden");
+    if (ratingSubmitted) showView(viewThanks);
   }
 
   document.getElementById("close-modal-btn").addEventListener("click", closeModal);

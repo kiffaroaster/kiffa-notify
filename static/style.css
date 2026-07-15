@@ -300,6 +300,33 @@ input[type="text"]:focus, input[type="tel"]:focus, input[type="number"]:focus {
   margin: 0;
 }
 
+.thanks-hero {
+  text-align: center;
+  padding: 20px 0 12px;
+}
+
+.thanks-hero .thanks-icon {
+  height: 62px;
+  width: auto;
+  margin-bottom: 18px;
+  animation: pop .4s cubic-bezier(.34,1.56,.64,1);
+}
+
+.thanks-hero h2 {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.thanks-hero p {
+  color: var(--teal-darker);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
 .hidden { display: none !important; }
 
 /* Modal */
