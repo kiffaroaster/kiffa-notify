@@ -40,6 +40,54 @@
     }
   }
 
+  /* ---------- Ready chime ---------- */
+
+  // المتصفح ما يسمح بالصوت إلا بعد تفاعل من المستخدم،
+  // فنجهّز الصوت عند أول لمسة/ضغطة على الصفحة
+  let audioCtx = null;
+
+  function initAudio() {
+    try {
+      audioCtx =
+        audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch (e) {
+      /* audio unsupported */
+    }
+  }
+
+  document.addEventListener("pointerdown", initAudio, { once: true });
+
+  function playReadyChime() {
+    if (!audioCtx || audioCtx.state !== "running") return;
+    try {
+      const t0 = audioCtx.currentTime;
+      // لحن صاعد من ثلاث نغمات يتكرر مرتين (~2.5 ثانية) بصوت عالي
+      [
+        [880, 0, 0.32],
+        [1108.73, 0.3, 0.32],
+        [1318.51, 0.6, 0.5],
+        [880, 1.3, 0.32],
+        [1108.73, 1.6, 0.32],
+        [1318.51, 1.9, 0.65],
+      ].forEach(([freq, delay, dur]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t0 + delay);
+        gain.gain.exponentialRampToValueAtTime(0.85, t0 + delay + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + delay + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t0 + delay);
+        osc.stop(t0 + delay + dur + 0.05);
+      });
+    } catch (e) {
+      /* best-effort */
+    }
+  }
+
   /* ---------- Web Push ---------- */
 
   function urlBase64ToUint8Array(base64String) {
@@ -110,6 +158,8 @@
     localStorage.removeItem(STORAGE_KEY);
     readyInvoiceNum.textContent = invoice;
     showView(viewReady);
+    playReadyChime();
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     fireLocalNotification(invoice);
     showToast(`طلبك رقم ${invoice} جاهز، تفضّل لاستلامه ✨`);
     setTimeout(openModal, 1600);
