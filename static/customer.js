@@ -154,6 +154,11 @@
       entryError.classList.remove("hidden");
       return;
     }
+    // نفس الجهاز اللي سجّل الرقم: نرجّعه لشاشة المتابعة بدل رفضه
+    if (localStorage.getItem(STORAGE_KEY) === invoice) {
+      enterWaiting(invoice);
+      return;
+    }
     confirmBtn.disabled = true;
     confirmBtn.textContent = "جاري التأكيد...";
     try {
@@ -162,6 +167,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ invoice }),
       });
+      if (res.status === 409) {
+        entryError.textContent = "رقم الفاتورة هذا مسجّل مسبقاً وطلبه قيد التحضير";
+        entryError.classList.remove("hidden");
+        return;
+      }
       if (!res.ok) throw new Error("failed");
       enterWaiting(invoice);
     } catch (e) {
@@ -199,14 +209,40 @@
 
   /* ---------- Rating & modal ---------- */
 
+  // اختيار النجوم يرسل التقييم تلقائياً بعد ثانية ونص من آخر ضغطة
   let selectedRating = 0;
+  let ratingSubmitted = false;
+  let ratingTimer = null;
   const starEls = document.querySelectorAll("#stars .star");
+
+  async function submitRating() {
+    if (ratingSubmitted || !selectedRating) return;
+    ratingSubmitted = true;
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoice: readyInvoiceNum.textContent,
+          rating: selectedRating,
+          text: "",
+        }),
+      });
+    } catch (e) {
+      /* best-effort */
+    }
+    showToast("شكراً لتقييمك، نقدّر وقتك 🌿");
+  }
+
   starEls.forEach((star) => {
     star.addEventListener("click", () => {
+      if (ratingSubmitted) return;
       selectedRating = parseInt(star.dataset.v, 10);
       starEls.forEach((s) => {
         s.classList.toggle("filled", parseInt(s.dataset.v, 10) <= selectedRating);
       });
+      clearTimeout(ratingTimer);
+      ratingTimer = setTimeout(submitRating, 1500);
     });
   });
 
@@ -217,28 +253,6 @@
     modalOverlay.classList.add("hidden");
   }
 
-  document.getElementById("submit-feedback-btn").addEventListener("click", async () => {
-    const text = document.getElementById("feedback-text").value.trim();
-    if (!selectedRating && !text) {
-      showToast("اختر تقييماً أو اكتب ملاحظة أولاً");
-      return;
-    }
-    try {
-      await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invoice: readyInvoiceNum.textContent,
-          rating: selectedRating,
-          text,
-        }),
-      });
-    } catch (e) {
-      /* best-effort; thank the customer anyway */
-    }
-    showToast("شكراً لتقييمك، نقدّر وقتك 🌿");
-    setTimeout(closeModal, 900);
-  });
   document.getElementById("close-modal-btn").addEventListener("click", closeModal);
   modalOverlay.addEventListener("click", (e) => {
     if (e.target === modalOverlay) closeModal();

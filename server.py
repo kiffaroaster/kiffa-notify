@@ -170,14 +170,16 @@ def create_order():
     if not invoice:
         return jsonify({"error": "invoice_required"}), 400
     with lock:
-        if invoice not in orders or orders[invoice]["status"] == "ready":
-            orders[invoice] = {
-                "status": "pending",
-                "created_at": time.time(),
-                "ready_at": None,
-                "subscription": None,
-            }
-    return jsonify({"invoice": invoice, "status": orders[invoice]["status"]})
+        existing = orders.get(invoice)
+        if existing and existing["status"] == "pending":
+            return jsonify({"error": "duplicate_pending"}), 409
+        orders[invoice] = {
+            "status": "pending",
+            "created_at": time.time(),
+            "ready_at": None,
+            "subscription": None,
+        }
+    return jsonify({"invoice": invoice, "status": "pending"})
 
 
 @app.post("/api/orders/<invoice>/subscribe")
