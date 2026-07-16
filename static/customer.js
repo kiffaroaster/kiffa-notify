@@ -13,10 +13,127 @@
   const modalOverlay = document.getElementById("modal-overlay");
 
   const STORAGE_KEY = "kiffa_invoice";
+  const LANG_KEY = "kiffa_lang";
 
-  document.getElementById("branch-name").textContent = cfg.BRANCH_NAME || "فرع كفة";
-  document.getElementById("branch-addr").textContent = cfg.BRANCH_ADDRESS || "";
   document.getElementById("review-link").href = cfg.MAPS_URL || "#";
+
+  /* ---------- اللغة (عربي / إنجليزي) ---------- */
+
+  const I18N = {
+    ar: {
+      dir: "rtl",
+      tagline: "الدغدغة جايتك!",
+      entry_title: "تابع طلبك من فرع الدائري",
+      entry_sub: "أدخل رقم الفاتورة واضغط تأكيد، وبنعلمك أول ما يكون طلبك جاهز.",
+      invoice_label: "رقم الفاتورة",
+      invoice_ph: "مثال: 18",
+      confirm_btn: "تأكيد",
+      confirming: "جاري التأكيد...",
+      err_empty: "الرجاء إدخال رقم الفاتورة",
+      err_duplicate: "رقم الفاتورة هذا مسجّل مسبقاً وطلبه قيد التحضير",
+      err_network: "تعذر الاتصال، حاول مرة أخرى",
+      waiting_badge: "جاري تحضير طلبك على قدم وساق",
+      waiting_text:
+        "نقدّر لك صبرك<br/>فريقنا يحضر طلبك بكل حبّ واهتمام<br/><br/>راح توصلك رسالة هنا أول مايكون جاهز",
+      ready_title: "طلبك جاهز!",
+      ready_before: "تفضّل لاستلام طلب رقم ",
+      ready_after: " من الكاونتر",
+      thanks_title: "يا أبهى من طلّ وأعزّ من زارنا",
+      thanks_sub: "بالعافية عليك",
+      modal_topbar: "طلبــك جاهـــز",
+      rating_title: "تقييمك يهمنا ورضاك غايتنا",
+      note_title: "واجهتك ملاحظة؟",
+      note_sub: "رضاك غايتنا واحنا هنا لخدمتك",
+      wa_btn: "تواصل معنا عبر واتساب",
+      wa_msg: "مرحباً كفة، عندي ملاحظة على طلبي",
+      support_title: "ارتقت التجربة لذائقتك؟",
+      support_sub: "ادعمنا بتقييمك",
+      review_btn: "قيّمنا على خرائط جوجل ⭐",
+      close_btn: "إغلاق",
+      toast_ready: (inv) => `طلبك رقم ${inv} جاهز، تفضّل لاستلامه ✨`,
+      toast_thanks: "شكراً لتقييمك، نقدّر وقتك 🌿",
+      notif_title: "طلبك جاهز! ☕",
+      notif_body: (inv) => `فاتورة رقم ${inv} جاهزة للاستلام من كفة`,
+      branch_name: cfg.BRANCH_NAME || "فرع كفة",
+      branch_addr: cfg.BRANCH_ADDRESS || "",
+    },
+    en: {
+      dir: "ltr",
+      tagline: "Your treat is on the way!",
+      entry_title: "Track your order — King Abdullah Rd Branch",
+      entry_sub:
+        "Enter your invoice number and tap Confirm — we'll let you know the moment your order is ready.",
+      invoice_label: "Invoice number",
+      invoice_ph: "e.g. 18",
+      confirm_btn: "Confirm",
+      confirming: "Confirming...",
+      err_empty: "Please enter your invoice number",
+      err_duplicate: "This invoice number is already registered and being prepared",
+      err_network: "Connection failed, please try again",
+      waiting_badge: "Your order is being prepared",
+      waiting_text:
+        "We appreciate your patience<br/>Our team is preparing your order with love and care<br/><br/>You'll get a message here the moment it's ready",
+      ready_title: "Your order is ready!",
+      ready_before: "Please collect order #",
+      ready_after: " from the counter",
+      thanks_title: "It was an honor to serve you",
+      thanks_sub: "Enjoy!",
+      modal_topbar: "YOUR ORDER IS READY",
+      rating_title: "Your feedback matters to us",
+      note_title: "Something wasn't right?",
+      note_sub: "Your satisfaction is our goal — we're here for you",
+      wa_btn: "Contact us on WhatsApp",
+      wa_msg: "Hi KIFFA, I have a note about my order",
+      support_title: "Enjoyed the experience?",
+      support_sub: "Support us with a review",
+      review_btn: "Rate us on Google Maps ⭐",
+      close_btn: "Close",
+      toast_ready: (inv) => `Order #${inv} is ready — come pick it up ✨`,
+      toast_thanks: "Thanks for your feedback 🌿",
+      notif_title: "Your order is ready! ☕",
+      notif_body: (inv) => `Invoice #${inv} is ready for pickup at KIFFA`,
+      branch_name: cfg.BRANCH_NAME_EN || cfg.BRANCH_NAME || "KIFFA Branch",
+      branch_addr: cfg.BRANCH_ADDRESS_EN || cfg.BRANCH_ADDRESS || "",
+    },
+  };
+
+  let lang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "ar";
+  const langToggle = document.getElementById("lang-toggle");
+
+  function t(key, arg) {
+    const v = I18N[lang][key];
+    return typeof v === "function" ? v(arg) : v;
+  }
+
+  function applyLang() {
+    const dict = I18N[lang];
+    document.documentElement.lang = lang;
+    document.documentElement.dir = dict.dir;
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const v = dict[el.dataset.i18n];
+      if (typeof v === "string") el.textContent = v;
+    });
+    document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+      const v = dict[el.dataset.i18nPh];
+      if (typeof v === "string") el.placeholder = v;
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => {
+      const v = dict[el.dataset.i18nHtml];
+      if (typeof v === "string") el.innerHTML = v;
+    });
+    document.getElementById("branch-name").textContent = dict.branch_name;
+    document.getElementById("branch-addr").textContent = dict.branch_addr;
+    document.getElementById("whatsapp-link").href =
+      "https://wa.me/966547528371?text=" + encodeURIComponent(dict.wa_msg);
+    langToggle.textContent = lang === "ar" ? "EN" : "عربي";
+    localStorage.setItem(LANG_KEY, lang);
+  }
+
+  langToggle.addEventListener("click", () => {
+    lang = lang === "ar" ? "en" : "ar";
+    applyLang();
+  });
+  applyLang();
 
   let pollTimer = null;
 
@@ -43,23 +160,55 @@
   /* ---------- Ready chime ---------- */
 
   // المتصفح ما يسمح بالصوت إلا بعد تفاعل من المستخدم،
-  // فنجهّز الصوت عند أول لمسة/ضغطة على الصفحة
+  // فنجهّز الصوت عند كل لمسة (آيفون يعلّق الصوت باستمرار فنعيد تفعيله)
   let audioCtx = null;
+  let mediaChannelUnlocked = false;
+
+  // مقطع صامت يعيد توجيه صوت الموقع لقناة الوسائط في آيفون
+  // (بدلاً من قناة الرنين التي يكتمها زر الصامت)
+  const SILENT_WAV =
+    "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA";
 
   function initAudio() {
     try {
       audioCtx =
         audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
+      if (audioCtx.state !== "running") audioCtx.resume();
+      if (!mediaChannelUnlocked) {
+        mediaChannelUnlocked = true;
+        const keeper = new Audio(SILENT_WAV);
+        keeper.loop = true;
+        keeper.volume = 0.01;
+        keeper.play().catch(() => {
+          mediaChannelUnlocked = false;
+        });
+      }
     } catch (e) {
       /* audio unsupported */
     }
   }
 
-  document.addEventListener("pointerdown", initAudio, { once: true });
+  document.addEventListener("pointerdown", initAudio);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && audioCtx && audioCtx.state !== "running") {
+      audioCtx.resume().catch(() => {});
+    }
+  });
 
   function playReadyChime() {
-    if (!audioCtx || audioCtx.state !== "running") return;
+    if (!audioCtx) return;
+    // آيفون يعلّق الصوت عند قفل الشاشة — نعيد تفعيله ثم نشغّل الرنة
+    if (audioCtx.state !== "running") {
+      audioCtx
+        .resume()
+        .then(() => scheduleChimeTones())
+        .catch(() => {});
+      return;
+    }
+    scheduleChimeTones();
+  }
+
+  function scheduleChimeTones() {
     try {
       const t0 = audioCtx.currentTime;
       // لحن صاعد من ثلاث نغمات يتكرر مرتين (~2.5 ثانية) بصوت عالي
@@ -141,8 +290,8 @@
   function fireLocalNotification(invoice) {
     if ("Notification" in window && Notification.permission === "granted") {
       try {
-        new Notification("طلبك جاهز! ☕", {
-          body: `فاتورة رقم ${invoice} جاهزة للاستلام من كفة`,
+        new Notification(t("notif_title"), {
+          body: t("notif_body", invoice),
           icon: "assets/pwa-icon-192.png",
         });
       } catch (e) {
@@ -161,7 +310,7 @@
     playReadyChime();
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     fireLocalNotification(invoice);
-    showToast(`طلبك رقم ${invoice} جاهز، تفضّل لاستلامه ✨`);
+    showToast(t("toast_ready", invoice));
     setTimeout(openModal, 1600);
   }
 
@@ -203,7 +352,7 @@
     const invoice = normalizeDigits(invoiceInput.value.trim());
     entryError.classList.add("hidden");
     if (!invoice) {
-      entryError.textContent = "الرجاء إدخال رقم الفاتورة";
+      entryError.textContent = t("err_empty");
       entryError.classList.remove("hidden");
       return;
     }
@@ -213,7 +362,7 @@
       return;
     }
     confirmBtn.disabled = true;
-    confirmBtn.textContent = "جاري التأكيد...";
+    confirmBtn.textContent = t("confirming");
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -221,18 +370,18 @@
         body: JSON.stringify({ invoice }),
       });
       if (res.status === 409) {
-        entryError.textContent = "رقم الفاتورة هذا مسجّل مسبقاً وطلبه قيد التحضير";
+        entryError.textContent = t("err_duplicate");
         entryError.classList.remove("hidden");
         return;
       }
       if (!res.ok) throw new Error("failed");
       enterWaiting(invoice);
     } catch (e) {
-      entryError.textContent = "تعذر الاتصال، حاول مرة أخرى";
+      entryError.textContent = t("err_network");
       entryError.classList.remove("hidden");
     } finally {
       confirmBtn.disabled = false;
-      confirmBtn.textContent = "تأكيد";
+      confirmBtn.textContent = t("confirm_btn");
     }
   }
 
@@ -284,7 +433,7 @@
     } catch (e) {
       /* best-effort */
     }
-    showToast("شكراً لتقييمك، نقدّر وقتك 🌿");
+    showToast(t("toast_thanks"));
     setTimeout(() => {
       closeModal();
       showView(viewThanks);
