@@ -211,26 +211,48 @@
   function scheduleChimeTones() {
     try {
       const t0 = audioCtx.currentTime;
-      // لحن صاعد من ثلاث نغمات يتكرر مرتين (~2.5 ثانية) بصوت عالي
-      [
+
+      // ضاغط ديناميكي يسمح برفع الصوت فوق الحد الطبيعي بدون تشويه
+      const comp = audioCtx.createDynamicsCompressor();
+      comp.threshold.value = -18;
+      comp.knee.value = 12;
+      comp.ratio.value = 12;
+      comp.attack.value = 0.002;
+      comp.release.value = 0.2;
+      const master = audioCtx.createGain();
+      master.gain.value = 2.6;
+      master.connect(comp);
+      comp.connect(audioCtx.destination);
+
+      // اللحن يتكرر 3 مرات (~3.5 ثانية) ليُسمع في الزحمة
+      const round = [
         [880, 0, 0.32],
         [1108.73, 0.3, 0.32],
-        [1318.51, 0.6, 0.5],
-        [880, 1.3, 0.32],
-        [1108.73, 1.6, 0.32],
-        [1318.51, 1.9, 0.65],
-      ].forEach(([freq, delay, dur]) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.0001, t0 + delay);
-        gain.gain.exponentialRampToValueAtTime(0.85, t0 + delay + 0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + delay + dur);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(t0 + delay);
-        osc.stop(t0 + delay + dur + 0.05);
+        [1318.51, 0.6, 0.55],
+      ];
+      const melody = [];
+      [0, 1.25, 2.5].forEach((offset) => {
+        round.forEach(([f, d, dur]) => melody.push([f, d + offset, dur]));
+      });
+
+      melody.forEach(([freq, delay, dur]) => {
+        // نغمة أساسية + هارمونيك أوكتاف أعلى = صوت أثخن وأوضح وسط الضجيج
+        [
+          [1, 1.0],
+          [2, 0.45],
+        ].forEach(([mult, vol]) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq * mult;
+          gain.gain.setValueAtTime(0.0001, t0 + delay);
+          gain.gain.exponentialRampToValueAtTime(vol, t0 + delay + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + delay + dur);
+          osc.connect(gain);
+          gain.connect(master);
+          osc.start(t0 + delay);
+          osc.stop(t0 + delay + dur + 0.05);
+        });
       });
     } catch (e) {
       /* best-effort */
@@ -457,7 +479,7 @@
   }
   function closeModal() {
     modalOverlay.classList.add("hidden");
-    if (ratingSubmitted) showView(viewThanks);
+    showView(viewThanks);
   }
 
   document.getElementById("close-modal-btn").addEventListener("click", closeModal);

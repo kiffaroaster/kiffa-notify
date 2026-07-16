@@ -27,6 +27,70 @@
     return { "X-Dashboard-Pin": pin || "" };
   }
 
+  /* ---------- نغمة تأكيد الجاهزية ---------- */
+
+  let audioCtx = null;
+
+  function initAudio() {
+    try {
+      audioCtx =
+        audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state !== "running") audioCtx.resume();
+    } catch (e) {
+      /* audio unsupported */
+    }
+  }
+
+  document.addEventListener("pointerdown", initAudio);
+
+  function playReadyChime() {
+    if (!audioCtx || audioCtx.state !== "running") return;
+    try {
+      const t0 = audioCtx.currentTime;
+      const comp = audioCtx.createDynamicsCompressor();
+      comp.threshold.value = -18;
+      comp.knee.value = 12;
+      comp.ratio.value = 12;
+      comp.attack.value = 0.002;
+      comp.release.value = 0.2;
+      const master = audioCtx.createGain();
+      master.gain.value = 2.6;
+      master.connect(comp);
+      comp.connect(audioCtx.destination);
+
+      const round = [
+        [880, 0, 0.32],
+        [1108.73, 0.3, 0.32],
+        [1318.51, 0.6, 0.55],
+      ];
+      const melody = [];
+      [0, 1.25, 2.5].forEach((offset) => {
+        round.forEach(([f, d, dur]) => melody.push([f, d + offset, dur]));
+      });
+
+      melody.forEach(([freq, delay, dur]) => {
+        [
+          [1, 1.0],
+          [2, 0.45],
+        ].forEach(([mult, vol]) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq * mult;
+          gain.gain.setValueAtTime(0.0001, t0 + delay);
+          gain.gain.exponentialRampToValueAtTime(vol, t0 + delay + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + delay + dur);
+          osc.connect(gain);
+          gain.connect(master);
+          osc.start(t0 + delay);
+          osc.stop(t0 + delay + dur + 0.05);
+        });
+      });
+    } catch (e) {
+      /* best-effort */
+    }
+  }
+
   /* ---------- PIN ---------- */
 
   async function tryLogin(candidate) {
@@ -225,6 +289,7 @@
         method: "POST",
         headers: authHeaders(),
       });
+      playReadyChime();
     } finally {
       doConfirmBtn.disabled = false;
       closeConfirm();
