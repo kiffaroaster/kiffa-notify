@@ -5,11 +5,6 @@
   const pinBtn = document.getElementById("pin-btn");
   const pinError = document.getElementById("pin-error");
   const dashMain = document.getElementById("dash-main");
-  const ratingsPanel = document.getElementById("ratings-panel");
-  const ratingsList = document.getElementById("ratings-list");
-  const ratingsEmpty = document.getElementById("ratings-empty");
-  const ratingsCount = document.getElementById("ratings-count");
-  const avgRating = document.getElementById("avg-rating");
   const grid = document.getElementById("orders-grid");
   const emptyState = document.getElementById("empty-state");
   const pendingCount = document.getElementById("pending-count");
@@ -109,14 +104,9 @@
   function unlock() {
     pinScreen.classList.add("hidden");
     dashMain.classList.remove("hidden");
-    ratingsPanel.classList.remove("hidden");
     refresh();
-    refreshRatings();
     if (!refreshTimer) {
-      refreshTimer = setInterval(() => {
-        refresh();
-        refreshRatings();
-      }, cfg.POLL_INTERVAL_MS || 2500);
+      refreshTimer = setInterval(refresh, cfg.POLL_INTERVAL_MS || 2500);
     }
   }
 
@@ -128,7 +118,6 @@
       refreshTimer = null;
     }
     dashMain.classList.add("hidden");
-    ratingsPanel.classList.add("hidden");
     pinScreen.classList.remove("hidden");
     pinInput.value = "";
     pinInput.focus();
@@ -204,67 +193,6 @@
       render(data);
     } catch (e) {
       /* keep last render on network hiccup */
-    }
-  }
-
-  /* ---------- Ratings ---------- */
-
-  function escapeHtml(s) {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-
-  function formatAgo(createdAt) {
-    const secs = Math.max(0, Math.floor(Date.now() / 1000 - createdAt));
-    const mins = Math.floor(secs / 60);
-    const hours = Math.floor(mins / 60);
-    const days = Math.floor(hours / 24);
-    if (days >= 1) return `منذ ${days} يوم`;
-    if (hours >= 1) return `منذ ${hours} ساعة`;
-    if (mins >= 1) return `منذ ${mins} دقيقة`;
-    return "الآن";
-  }
-
-  function renderRatings(items) {
-    ratingsCount.textContent = items.length;
-    const rated = items.filter((f) => f.rating > 0);
-    if (rated.length) {
-      const avg = rated.reduce((s, f) => s + f.rating, 0) / rated.length;
-      avgRating.textContent = `★ ${avg.toFixed(1)} من 5`;
-    } else {
-      avgRating.textContent = "—";
-    }
-    if (items.length === 0) {
-      ratingsList.innerHTML = "";
-      ratingsEmpty.classList.remove("hidden");
-      return;
-    }
-    ratingsEmpty.classList.add("hidden");
-    ratingsList.innerHTML = items
-      .map(
-        (f) => `
-        <div class="rating-item">
-          <div class="rating-head">
-            <span class="rating-stars">${"★".repeat(f.rating)}<span class="off">${"★".repeat(5 - f.rating)}</span></span>
-            ${f.invoice ? `<span class="rating-invoice">#${escapeHtml(f.invoice)}</span>` : ""}
-            <span class="rating-date">${formatAgo(f.created_at)}</span>
-          </div>
-          ${f.text ? `<p class="rating-text">${escapeHtml(f.text)}</p>` : ""}
-        </div>`
-      )
-      .join("");
-  }
-
-  async function refreshRatings() {
-    try {
-      const res = await fetch("/api/feedback", { headers: authHeaders() });
-      if (!res.ok) return;
-      renderRatings(await res.json());
-    } catch (e) {
-      /* keep last render */
     }
   }
 
