@@ -11,6 +11,8 @@
   const readyInvoiceNum = document.getElementById("ready-invoice-num");
   const toast = document.getElementById("toast");
   const modalOverlay = document.getElementById("modal-overlay");
+  const noticeOverlay = document.getElementById("notice-overlay");
+  const noticeConfirmBtn = document.getElementById("notice-confirm-btn");
 
   const STORAGE_KEY = "kiffa_invoice";
   const LANG_KEY = "kiffa_lang";
@@ -41,7 +43,6 @@
       thanks_title: "يا أبهى من طلّ وأعزّ من زارنا",
       thanks_sub: "بالعافية عليك",
       modal_topbar: "طلبــك جاهـــز",
-      rating_title: "تقييمك يهمنا ورضاك غايتنا",
       note_title: "واجهتك ملاحظة؟",
       note_sub: "رضاك غايتنا واحنا هنا لخدمتك",
       wa_btn: "تواصل معنا عبر واتساب",
@@ -50,8 +51,9 @@
       support_sub: "ادعمنا بتقييمك",
       review_btn: "قيّمنا على خرائط جوجل ⭐",
       close_btn: "إغلاق",
+      notice_text: "فضلاً اترك الصفحة مفتوحة حتى يوصلك صوت التنبيه",
+      notice_btn: "تأكيد",
       toast_ready: (inv) => `طلبك رقم ${inv} جاهز، تفضّل لاستلامه ✨`,
-      toast_thanks: "شكراً لتقييمك، نقدّر وقتك 🌿",
       notif_title: "طلبك جاهز! ☕",
       notif_body: (inv) => `فاتورة رقم ${inv} جاهزة للاستلام من كفة`,
       branch_name: cfg.BRANCH_NAME || "فرع كفة",
@@ -79,7 +81,6 @@
       thanks_title: "It was an honor to serve you",
       thanks_sub: "Enjoy!",
       modal_topbar: "YOUR ORDER IS READY",
-      rating_title: "Your feedback matters to us",
       note_title: "Something wasn't right?",
       note_sub: "Your satisfaction is our goal — we're here for you",
       wa_btn: "Contact us on WhatsApp",
@@ -88,8 +89,9 @@
       support_sub: "Support us with a review",
       review_btn: "Rate us on Google Maps ⭐",
       close_btn: "Close",
+      notice_text: "Please keep this page open so you can hear the notification sound",
+      notice_btn: "Confirm",
       toast_ready: (inv) => `Order #${inv} is ready — come pick it up ✨`,
-      toast_thanks: "Thanks for your feedback 🌿",
       notif_title: "Your order is ready! ☕",
       notif_body: (inv) => `Invoice #${inv} is ready for pickup at KIFFA`,
       branch_name: cfg.BRANCH_NAME_EN || cfg.BRANCH_NAME || "KIFFA Branch",
@@ -344,6 +346,21 @@
     pollStatus(invoice);
   }
 
+  // popup تذكير: يظهر مباشرة بعد التأكيد، والضغط عليه يُدخل العميل
+  // لشاشة الانتظار (ويُستخدم كإيماءة مستخدم إضافية لفتح الصوت في آيفون)
+  let pendingNoticeInvoice = null;
+
+  function showNoticePopup(invoice) {
+    pendingNoticeInvoice = invoice;
+    noticeOverlay.classList.remove("hidden");
+  }
+
+  noticeConfirmBtn.addEventListener("click", () => {
+    noticeOverlay.classList.add("hidden");
+    if (pendingNoticeInvoice) enterWaiting(pendingNoticeInvoice);
+    pendingNoticeInvoice = null;
+  });
+
   function pollStatus(invoice) {
     stopPolling();
     pollTimer = setInterval(async () => {
@@ -380,7 +397,7 @@
     }
     // نفس الجهاز اللي سجّل الرقم: نرجّعه لشاشة المتابعة بدل رفضه
     if (localStorage.getItem(STORAGE_KEY) === invoice) {
-      enterWaiting(invoice);
+      showNoticePopup(invoice);
       return;
     }
     confirmBtn.disabled = true;
@@ -397,7 +414,7 @@
         return;
       }
       if (!res.ok) throw new Error("failed");
-      enterWaiting(invoice);
+      showNoticePopup(invoice);
     } catch (e) {
       entryError.textContent = t("err_network");
       entryError.classList.remove("hidden");
@@ -431,48 +448,7 @@
     }
   })();
 
-  /* ---------- Rating & modal ---------- */
-
-  // اختيار النجوم يرسل التقييم تلقائياً بعد ثانية ونص من آخر ضغطة
-  let selectedRating = 0;
-  let ratingSubmitted = false;
-  let ratingTimer = null;
-  const starEls = document.querySelectorAll("#stars .star");
-
-  async function submitRating() {
-    if (ratingSubmitted || !selectedRating) return;
-    ratingSubmitted = true;
-    try {
-      await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invoice: readyInvoiceNum.textContent,
-          rating: selectedRating,
-          text: "",
-        }),
-      });
-    } catch (e) {
-      /* best-effort */
-    }
-    showToast(t("toast_thanks"));
-    setTimeout(() => {
-      closeModal();
-      showView(viewThanks);
-    }, 1600);
-  }
-
-  starEls.forEach((star) => {
-    star.addEventListener("click", () => {
-      if (ratingSubmitted) return;
-      selectedRating = parseInt(star.dataset.v, 10);
-      starEls.forEach((s) => {
-        s.classList.toggle("filled", parseInt(s.dataset.v, 10) <= selectedRating);
-      });
-      clearTimeout(ratingTimer);
-      ratingTimer = setTimeout(submitRating, 1500);
-    });
-  });
+  /* ---------- Modal ---------- */
 
   function openModal() {
     modalOverlay.classList.remove("hidden");
