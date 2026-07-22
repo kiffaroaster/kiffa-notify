@@ -64,21 +64,27 @@
 
 <div class="toast" id="toast">طلبك جاهز، تفضّل لاستلامه ✨</div>
 
+<!-- Popup: keep page open reminder -->
+<div class="notice-overlay hidden" id="notice-overlay">
+  <div class="notice-card">
+    <div class="notice-icon">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#dae242" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 9.5v5h4l5 4.2V5.3l-5 4.2H3z" fill="#dae242" stroke="none"/>
+        <path d="M15.8 8.2a5.2 5.2 0 0 1 0 7.6"/>
+        <path d="M18.6 5.6a9.2 9.2 0 0 1 0 12.8"/>
+      </svg>
+    </div>
+    <p data-i18n="notice_text">فضلاً اترك الصفحة مفتوحة حتى يوصلك صوت التنبيه</p>
+    <button class="btn btn-primary" id="notice-confirm-btn" data-i18n="notice_btn">تأكيد</button>
+  </div>
+</div>
+
 <!-- Modal: rating + location -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal-sheet">
     <div class="modal-topbar" data-i18n="modal_topbar">طلبــك جاهـــز</div>
 
     <div class="modal-section">
-      <h3 data-i18n="rating_title">تقييمك يهمنا ورضاك غايتنا</h3>
-      <div class="stars" id="stars">
-        <span class="star" data-v="1">★</span>
-        <span class="star" data-v="2">★</span>
-        <span class="star" data-v="3">★</span>
-        <span class="star" data-v="4">★</span>
-        <span class="star" data-v="5">★</span>
-      </div>
-
       <div class="note-block">
         <h4 data-i18n="note_title">واجهتك ملاحظة؟</h4>
         <p data-i18n="note_sub">رضاك غايتنا واحنا هنا لخدمتك</p>
