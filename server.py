@@ -44,31 +44,6 @@ def pin_ok():
 # invoice_number -> {"status", "created_at", "ready_at", "subscription"}
 orders = {}
 
-# التقييمات: تُحفظ في ملف وتُحذف تلقائياً بعد 30 يوم
-FEEDBACK_FILE = os.path.join(BASE_DIR, "feedback.json")
-FEEDBACK_TTL_SECONDS = 30 * 24 * 3600
-
-
-def load_feedbacks():
-    try:
-        with open(FEEDBACK_FILE, encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return []
-
-
-def prune_feedbacks(items):
-    cutoff = time.time() - FEEDBACK_TTL_SECONDS
-    return [x for x in items if x.get("created_at", 0) >= cutoff]
-
-
-def save_feedbacks(items):
-    with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
-        json.dump(items, f, ensure_ascii=False)
-
-
-feedbacks = prune_feedbacks(load_feedbacks())
-
 
 def send_push(subscription, invoice):
     payload = json.dumps(
@@ -103,42 +78,6 @@ def dashboard_page():
 @app.get("/api/push/key")
 def push_key():
     return jsonify({"key": VAPID_PUBLIC_KEY})
-
-
-@app.post("/api/feedback")
-def add_feedback():
-    global feedbacks
-    data = request.get_json(silent=True) or {}
-    text = str(data.get("text", "")).strip()[:500]
-    try:
-        rating = int(data.get("rating", 0))
-    except (TypeError, ValueError):
-        rating = 0
-    rating = max(0, min(5, rating))
-    if rating == 0 and not text:
-        return jsonify({"error": "empty"}), 400
-    entry = {
-        "invoice": str(data.get("invoice", "")).strip()[:20],
-        "rating": rating,
-        "text": text,
-        "created_at": time.time(),
-    }
-    with lock:
-        feedbacks = prune_feedbacks(feedbacks)
-        feedbacks.append(entry)
-        save_feedbacks(feedbacks)
-    return jsonify({"ok": True})
-
-
-@app.get("/api/feedback")
-def list_feedback():
-    global feedbacks
-    if not pin_ok():
-        return jsonify({"error": "unauthorized"}), 401
-    with lock:
-        feedbacks = prune_feedbacks(feedbacks)
-        items = list(reversed(feedbacks))
-    return jsonify(items)
 
 
 @app.post("/api/dashboard/verify")
